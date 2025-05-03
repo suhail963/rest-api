@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>PDF to Markdown</title>
+  <style>
+    body { font-family: sans-serif; padding: 40px; max-width: 600px; margin: auto; }
+    textarea { width: 100%; height: 300px; margin-top: 20px; }
+    .error { color: red; }
+    .success { color: green; }
+    #downloadBtn { display: none; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <h1>PDF to Markdown Converter</h1>
+  <form id="uploadForm">
+    <input type="file" name="file" accept="application/pdf" required>
+    <button type="submit">Convert</button>
+  </form>
+
+  <div id="message"></div>
+  <textarea id="markdownOutput" readonly></textarea>
+
+  <a id="downloadBtn" href="#" download class="button">⬇️ Download Markdown File</a>
+
+  <script>
+    document.getElementById("uploadForm").addEventListener("submit", async function(e) {
+      e.preventDefault();
+
+      const formData = new FormData();
+      const fileInput = document.querySelector('input[type="file"]');
+      formData.append("file", fileInput.files[0]);
+
+      const response = await fetch("/convert", {
+        method: "POST",
+        body: formData
+      });
+
+      const result = await response.json();
+      const messageDiv = document.getElementById("message");
+      const outputBox = document.getElementById("markdownOutput");
+      const downloadBtn = document.getElementById("downloadBtn");
+
+      if (result.success) {
+        messageDiv.textContent = "Conversion successful!";
+        messageDiv.className = "success";
+        outputBox.value = result.markdown;
+
+        downloadBtn.href = result.download_url;
+        downloadBtn.download = result.download_url.split('/').pop();
+        downloadBtn.style.display = "inline-block";
+      } else {
+        messageDiv.textContent = result.message;
+        messageDiv.className = "error";
+        outputBox.value = "";
+        downloadBtn.style.display = "none";
+      }
+    });
+  </script>
+</body>
+</html>
